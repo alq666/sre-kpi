@@ -8,24 +8,22 @@ import sys
 # Prepare the sqlite file for queries
 # A denormalized version of the csv
 try:
-    os.remove('monitors.sqlite')
+    os.remove('pagerduty.sqlite')
 except:
     pass
 
-conn = sqlite3.connect('monitors.sqlite')
+conn = sqlite3.connect('pagerduty.sqlite')
 c = conn.cursor()
 c.execute("""
-create table monitors
+create table pagerduty
 (
 day date,
 hour integer,
 source_type text,
 alert_type text,
 priority integer,
-hostname text,
-device text,
-alert_name text,
-user text,
+service text,
+email text,
 cnt integer
 )
 """)
@@ -40,16 +38,12 @@ for l in reader:
     src  = l[headers.index('source_type_name')]
     alty = l[headers.index('alert_type')]
     prio = int(l[headers.index('priority')])
-    host = l[headers.index('host_name')]
-    dev  = l[headers.index('device_name')]
-    alnm = l[headers.index('alert_name')]
-    usrs = l[headers.index('user')].split()
+    svc  = l[headers.index('service')]
+    eml  = l[headers.index('email')]
     cnt  = int(l[headers.index('cnt')])
 
-    # In the case of multiple users, denormalize
-    for usr in usrs:
-        stmt = """insert into monitors
-        (day, hour, source_type, alert_type, priority, hostname, device, alert_name, user, cnt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        c.execute(stmt, [day, hour, src, alty, prio, host, dev, alnm, usr, cnt])
+    stmt = """insert into pagerduty
+    (day, hour, source_type, alert_type, priority, service, email, cnt) values (?, ?, ?, ?, ?, ?, ?, ?)"""
+    c.execute(stmt, [day, hour, src, alty, prio, svc, eml, cnt])
 
 conn.commit()
